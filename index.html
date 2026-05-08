@@ -1,0 +1,582 @@
+<!doctype html>
+
+<html lang="pl">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Blackfire GraphQL Command Builder</title>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --panel: #111827;
+            --panel-2: #1f2937;
+            --text: #e5e7eb;
+            --muted: #9ca3af;
+            --border: #374151;
+            --accent: #38bdf8;
+            --accent-2: #22c55e;
+            --danger: #f87171;
+            --code: #020617;
+            --shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+        }
+
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(56, 189, 248, 0.18), transparent 34rem),
+                radial-gradient(circle at bottom right, rgba(34, 197, 94, 0.11), transparent 30rem),
+                var(--bg);
+            color: var(--text);
+        }
+
+        .page {
+            width: min(1180px, calc(100% - 32px));
+            margin: 0 auto;
+            padding: 38px 0 56px;
+        }
+
+        .hero {
+            margin-bottom: 24px;
+        }
+
+        .badge {
+            display: inline-flex;
+            gap: 8px;
+            align-items: center;
+            padding: 6px 10px;
+            border: 1px solid rgba(56, 189, 248, 0.38);
+            border-radius: 999px;
+            color: #bae6fd;
+            background: rgba(2, 132, 199, 0.14);
+            font-size: 13px;
+        }
+
+        h1 {
+            margin: 16px 0 10px;
+            font-size: clamp(30px, 5vw, 52px);
+            line-height: 1.02;
+            letter-spacing: -0.04em;
+        }
+
+        .lead {
+            max-width: 820px;
+            margin: 0;
+            color: var(--muted);
+            line-height: 1.65;
+            font-size: 16px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) minmax(360px, 0.78fr);
+            gap: 20px;
+            align-items: start;
+        }
+
+        .card {
+            background: rgba(17, 24, 39, 0.9);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 22px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            backdrop-filter: blur(14px);
+        }
+
+        .card-header {
+            padding: 18px 20px;
+            border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+            background: rgba(31, 41, 55, 0.48);
+        }
+
+        .card-header h2 {
+            margin: 0;
+            font-size: 17px;
+            letter-spacing: -0.01em;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 14px;
+        }
+
+        .field.full {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            color: #cbd5e1;
+            font-size: 13px;
+            font-weight: 650;
+        }
+
+        input,
+        select,
+        textarea {
+            width: 100%;
+            border: 1px solid var(--border);
+            background: rgba(2, 6, 23, 0.72);
+            color: var(--text);
+            border-radius: 13px;
+            padding: 11px 12px;
+            font: inherit;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s, background 0.15s;
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: rgba(56, 189, 248, 0.75);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.12);
+            background: rgba(2, 6, 23, 0.92);
+        }
+
+        textarea {
+            min-height: 240px;
+            resize: vertical;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 12px;
+            line-height: 1.45;
+        }
+
+        .row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .checkbox-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 0 2px;
+            color: #cbd5e1;
+            font-size: 14px;
+        }
+
+        .checkbox-row input {
+            width: auto;
+            accent-color: var(--accent);
+        }
+
+        .button {
+            border: 0;
+            border-radius: 13px;
+            padding: 11px 14px;
+            background: #334155;
+            color: white;
+            font-weight: 750;
+            cursor: pointer;
+            transition: transform 0.12s, opacity 0.12s, background 0.12s;
+        }
+
+        .button:hover {
+            transform: translateY(-1px);
+            opacity: 0.95;
+        }
+
+        .button.primary {
+            background: linear-gradient(135deg, #0284c7, #0ea5e9);
+        }
+
+        .button.success {
+            background: linear-gradient(135deg, #16a34a, #22c55e);
+        }
+
+        .button.ghost {
+            background: rgba(148, 163, 184, 0.16);
+            border: 1px solid rgba(148, 163, 184, 0.2);
+        }
+
+        .output {
+            min-height: 250px;
+            white-space: pre-wrap;
+            word-break: break-word;
+            background: var(--code);
+            border: 1px solid rgba(148, 163, 184, 0.22);
+            border-radius: 16px;
+            padding: 16px;
+            color: #d1fae5;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .status {
+            min-height: 20px;
+            color: #bbf7d0;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+
+        .status.error {
+            color: var(--danger);
+        }
+
+        .pill-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 14px;
+        }
+
+        .pill {
+            border: 1px solid rgba(148, 163, 184, 0.2);
+            border-radius: 999px;
+            padding: 6px 9px;
+            color: var(--muted);
+            background: rgba(148, 163, 184, 0.08);
+            font-size: 12px;
+        }
+
+        .quick-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-bottom: 14px;
+        }
+
+        @media (max-width: 900px) {
+            .grid,
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+
+</head>
+<body>
+<main class="page">
+    <section class="hero">
+        <div class="badge">⚡ Blackfire helper dla GraphQL</div>
+        <h1>Generator komend <br />blackfire curl</h1>
+        <p class="lead">
+            Wklej GraphQL query, ustaw endpoint oraz nagłówek Host, a aplikacja wygeneruje gotową komendę do odpalenia w terminalu lub kontenerze.
+            Nic nie jest wysyłane na serwer — całość działa lokalnie w przeglądarce.
+        </p>
+    </section>
+
+
+    <section class="grid">
+        <div class="card">
+            <div class="card-header">
+                <h2>Ustawienia requesta</h2>
+            </div>
+            <div class="card-body">
+                <div class="form-grid">
+                    <div class="field full">
+                        <label for="endpoint">Endpoint GraphQL</label>
+                        <input id="endpoint" value="https://magento_nginx/graphql" spellcheck="false" />
+                        <div class="hint">Przykład: <code>https://magento_nginx/graphql</code> albo <code>http://nginx/graphql</code></div>
+                    </div>
+
+                    <div class="field">
+                        <label for="hostHeader">Nagłówek Host</label>
+                        <input id="hostHeader" value="example.local" spellcheck="false" />
+                    </div>
+
+                    <div class="field">
+                        <label for="method">Metoda</label>
+                        <select id="method">
+                            <option value="GET" selected>GET — query w URL</option>
+                            <option value="POST">POST — JSON body</option>
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <label for="profileTitle">Nazwa profilu Blackfire, opcjonalnie</label>
+                        <input id="profileTitle" placeholder="np. GraphQL products query" spellcheck="false" />
+                    </div>
+
+                    <div class="field">
+                        <label for="variables">Variables JSON, opcjonalnie</label>
+                        <input id="variables" placeholder='np. {"sku":["EXAMPLE-SKU-001"]}' spellcheck="false" />
+                    </div>
+
+                    <div class="field full">
+                        <label for="extraHeaders">Dodatkowe nagłówki, opcjonalnie — jeden na linię</label>
+                        <textarea id="extraHeaders" style="min-height: 90px" spellcheck="false" placeholder="Store: default&#10;Authorization: Bearer EXAMPLE_TOKEN"></textarea>
+                        <div class="hint">Nie wpisuj tu <code>Host</code>, bo ma osobne pole powyżej.</div>
+                    </div>
+
+                    <div class="field full">
+                        <label for="query">GraphQL query</label>
+                        <div class="quick-actions">
+                            <button class="button ghost" id="exampleBtn" type="button">Wstaw przykład</button>
+                            <button class="button ghost" id="decodeUrlBtn" type="button">Spróbuj odkodować z URL/curl</button>
+                            <button class="button ghost" id="clearBtn" type="button">Wyczyść query</button>
+                        </div>
+                        <textarea id="query" spellcheck="false" placeholder="{ products(filter: { sku: { in: [\"EXAMPLE-SKU-001\"] } }) { items { sku name } } }">{ __typename }</textarea>
+                    </div>
+                </div>
+
+                <div class="checkbox-row">
+                    <input id="insecure" type="checkbox" checked />
+                    <label for="insecure">Dodaj <code>-k</code> / <code>--insecure</code>, przydatne przy lokalnym TLS</label>
+                </div>
+
+                <div class="checkbox-row">
+                    <input id="prettyMultiline" type="checkbox" checked />
+                    <label for="prettyMultiline">Generuj czytelną komendę wieloliniową</label>
+                </div>
+
+                <div class="row" style="margin-top: 18px">
+                    <button class="button primary" id="buildBtn" type="button">Zbuduj komendę</button>
+                    <button class="button success" id="copyBtn" type="button">Kopiuj komendę</button>
+                </div>
+                <div id="status" class="status"></div>
+            </div>
+        </div>
+
+        <aside class="card">
+            <div class="card-header">
+                <h2>Gotowa komenda</h2>
+            </div>
+            <div class="card-body">
+                <pre id="output" class="output"></pre>
+                <div class="pill-list">
+                    <span class="pill">blackfire curl</span>
+                    <span class="pill">GraphQL</span>
+                    <span class="pill">curl</span>
+                    <span class="pill">Docker-ready</span>
+                </div>
+            </div>
+        </aside>
+    </section>
+
+</main>
+
+<script>
+    const $ = (id) => document.getElementById(id);
+
+    const endpoint = $('endpoint');
+    const hostHeader = $('hostHeader');
+    const method = $('method');
+    const profileTitle = $('profileTitle');
+    const variables = $('variables');
+    const extraHeaders = $('extraHeaders');
+    const query = $('query');
+    const insecure = $('insecure');
+    const prettyMultiline = $('prettyMultiline');
+    const output = $('output');
+    const status = $('status');
+
+    function shellQuote(value) {
+        return "'" + String(value).replace(/'/g, "'\\''") + "'";
+    }
+
+    function normalizeEndpoint(value) {
+        return String(value || '').trim();
+    }
+
+    function parseExtraHeaders(raw) {
+        return String(raw || '')
+            .split('\n')
+            .map((line) => line.trim())
+            .filter(Boolean)
+            .filter((line) => !line.toLowerCase().startsWith('host:'));
+    }
+
+    function getVariablesJson(raw) {
+        const trimmed = String(raw || '').trim();
+        if (!trimmed) {
+            return null;
+        }
+
+        try {
+            return JSON.parse(trimmed);
+        } catch (error) {
+            throw new Error('Variables JSON jest niepoprawny: ' + error.message);
+        }
+    }
+
+    function buildGetUrl(baseEndpoint, gqlQuery, variablesJson) {
+        const url = new URL(baseEndpoint);
+        url.searchParams.set('query', gqlQuery);
+        if (variablesJson !== null) {
+            url.searchParams.set('variables', JSON.stringify(variablesJson));
+        }
+        return url.toString();
+    }
+
+    function buildPostBody(gqlQuery, variablesJson) {
+        const payload = { query: gqlQuery };
+        if (variablesJson !== null) {
+            payload.variables = variablesJson;
+        }
+        return JSON.stringify(payload);
+    }
+
+    function buildCommand() {
+        const gqlQuery = query.value.trim();
+        const baseEndpoint = normalizeEndpoint(endpoint.value);
+        const host = hostHeader.value.trim();
+        const selectedMethod = method.value;
+        const variablesJson = getVariablesJson(variables.value);
+        const headers = parseExtraHeaders(extraHeaders.value);
+        const multiline = prettyMultiline.checked;
+        const parts = ['blackfire', 'curl'];
+
+        if (!baseEndpoint) {
+            throw new Error('Endpoint GraphQL jest wymagany.');
+        }
+        if (!gqlQuery) {
+            throw new Error('GraphQL query jest wymagane.');
+        }
+
+        if (insecure.checked) {
+            parts.push('-k');
+        }
+
+        const title = profileTitle.value.trim();
+        if (title) {
+            parts.push('--title', shellQuote(title));
+        }
+
+        if (host) {
+            parts.push('-H', shellQuote('Host: ' + host));
+        }
+
+        for (const header of headers) {
+            parts.push('-H', shellQuote(header));
+        }
+
+        let targetUrl = baseEndpoint;
+        if (selectedMethod === 'GET') {
+            targetUrl = buildGetUrl(baseEndpoint, gqlQuery, variablesJson);
+            parts.push(shellQuote(targetUrl));
+        } else {
+            parts.push('-X', 'POST');
+            parts.push('-H', shellQuote('Content-Type: application/json'));
+            parts.push('--data-raw', shellQuote(buildPostBody(gqlQuery, variablesJson)));
+            parts.push(shellQuote(targetUrl));
+        }
+
+        if (!multiline) {
+            return parts.join(' ');
+        }
+
+        const formatted = [];
+        for (let i = 0; i < parts.length; i++) {
+            if (i === 0) {
+                formatted.push(parts[i] + ' ' + parts[++i] + ' \\');
+                continue;
+            }
+            const isLast = i === parts.length - 1;
+            formatted.push('  ' + parts[i] + (isLast ? '' : ' \\'));
+        }
+        return formatted.join('\n');
+    }
+
+    function setStatus(message, isError = false) {
+        status.textContent = message;
+        status.classList.toggle('error', isError);
+    }
+
+    function refreshOutput() {
+        try {
+            output.textContent = buildCommand();
+            setStatus('Komenda gotowa.');
+        } catch (error) {
+            output.textContent = '';
+            setStatus(error.message, true);
+        }
+    }
+
+    async function copyCommand() {
+        try {
+            const command = buildCommand();
+            await navigator.clipboard.writeText(command);
+            output.textContent = command;
+            setStatus('Skopiowano do schowka.');
+        } catch (error) {
+            setStatus('Nie udało się skopiować: ' + error.message, true);
+        }
+    }
+
+    function tryDecodeFromCurlOrUrl() {
+        const raw = query.value.trim();
+        if (!raw) {
+            setStatus('Pole query jest puste.', true);
+            return;
+        }
+
+        try {
+            const queryMatch = raw.match(/[?&]query=([^&\s"']+)/);
+            if (queryMatch && queryMatch[1]) {
+                query.value = decodeURIComponent(queryMatch[1].replace(/\+/g, '%20'));
+                refreshOutput();
+                setStatus('Odkodowano query z URL/curl.');
+                return;
+            }
+
+            const jsonStart = raw.indexOf('{');
+            const jsonEnd = raw.lastIndexOf('}');
+            if (jsonStart >= 0 && jsonEnd > jsonStart) {
+                const maybeJson = raw.slice(jsonStart, jsonEnd + 1);
+                const parsed = JSON.parse(maybeJson);
+                if (parsed.query) {
+                    query.value = parsed.query;
+                    if (parsed.variables) {
+                        variables.value = JSON.stringify(parsed.variables);
+                    }
+                    refreshOutput();
+                    setStatus('Odkodowano query z JSON body.');
+                    return;
+                }
+            }
+
+            setStatus('Nie znalazłem parametru query= ani JSON body z polem query.', true);
+        } catch (error) {
+            setStatus('Nie udało się odkodować: ' + error.message, true);
+        }
+    }
+
+    $('buildBtn').addEventListener('click', refreshOutput);
+    $('copyBtn').addEventListener('click', copyCommand);
+    $('decodeUrlBtn').addEventListener('click', tryDecodeFromCurlOrUrl);
+    $('clearBtn').addEventListener('click', () => {
+        query.value = '';
+        refreshOutput();
+    });
+    $('exampleBtn').addEventListener('click', () => {
+        query.value = `{\n  products(\n    filter: {\n      sku: {\n        in: [\"EXAMPLE-SKU-001\"]\n      }\n    },\n    currentPage: 1,\n    pageSize: 1\n  ) {\n    items {\n      sku\n      name\n      stock_status\n      price_range {\n        maximum_price {\n          final_price {\n            value\n            currency\n          }\n        }\n      }\n    }\n  }\n}`;
+        refreshOutput();
+    });
+
+    for (const element of [endpoint, hostHeader, method, profileTitle, variables, extraHeaders, query, insecure, prettyMultiline]) {
+        element.addEventListener('input', refreshOutput);
+        element.addEventListener('change', refreshOutput);
+    }
+
+    refreshOutput();
+</script>
+
+</body>
+</html>
